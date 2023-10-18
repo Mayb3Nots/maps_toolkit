@@ -1,9 +1,9 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:latlong2/latlong.dart';
 import 'package:maps_toolkit/src/spherical_util.dart';
 
-import 'latlng.dart';
 import 'math_util.dart';
 
 /// Port of PolyUtil from android-maps-utils (https://github.com/googlemaps/android-maps-utils)
@@ -19,15 +19,12 @@ class PolygonUtil {
   /// Returns mercator(latitude-at-lng3) on the Rhumb line (lat1, lng1) to
   /// (lat2, lng2). lng1==0.
   static num _mercatorLatRhumb(num lat1, num lat2, num lng2, num lng3) =>
-      (MathUtil.mercator(lat1) * (lng2 - lng3) +
-          MathUtil.mercator(lat2) * lng3) /
-      lng2;
+      (MathUtil.mercator(lat1) * (lng2 - lng3) + MathUtil.mercator(lat2) * lng3) / lng2;
 
   /// Computes whether the vertical segment (lat3, lng3) to South Pole
   /// intersects the segment (lat1, lng1) to (lat2, lng2).
   /// Longitudes are offset by -lng1; the implicit lng1 becomes 0.
-  static bool _intersects(
-      num lat1, num lat2, num lng2, num lat3, num lng3, bool geodesic) {
+  static bool _intersects(num lat1, num lat2, num lng2, num lat3, num lng3, bool geodesic) {
     // Both ends on the same side of lng3.
     if ((lng3 >= 0 && lng3 >= lng2) || (lng3 < 0 && lng3 < lng2)) {
       return false;
@@ -37,10 +34,7 @@ class PolygonUtil {
       return false;
     }
     // Any segment end is a pole.
-    if (lat1 <= -pi / 2 ||
-        lat2 <= -pi / 2 ||
-        lat1 >= pi / 2 ||
-        lat2 >= pi / 2) {
+    if (lat1 <= -pi / 2 || lat2 <= -pi / 2 || lat1 >= pi / 2 || lat2 >= pi / 2) {
       return false;
     }
     if (lng2 <= -pi) {
@@ -69,10 +63,8 @@ class PolygonUtil {
         : MathUtil.mercator(lat3) >= _mercatorLatRhumb(lat1, lat2, lng2, lng3);
   }
 
-  static bool containsLocation(
-          LatLng point, List<LatLng> polygon, bool geodesic) =>
-      containsLocationAtLatLng(
-          point.latitude, point.longitude, polygon, geodesic);
+  static bool containsLocation(LatLng point, List<LatLng> polygon, bool geodesic) =>
+      containsLocationAtLatLng(point.latitude, point.longitude, polygon, geodesic);
 
   /// Computes whether the given point lies inside the specified polygon.
   /// The polygon is always considered closed, regardless of whether the last
@@ -102,8 +94,7 @@ class PolygonUtil {
       final lat2 = MathUtil.toRadians(point2.latitude);
       final lng2 = MathUtil.toRadians(point2.longitude);
       // Offset longitudes by -lng1.
-      if (_intersects(lat1, lat2, MathUtil.wrap(lng2 - lng1, -pi, pi), lat3,
-          dLng3, geodesic)) {
+      if (_intersects(lat1, lat2, MathUtil.wrap(lng2 - lng1, -pi, pi), lat3, dLng3, geodesic)) {
         ++nIntersect;
       }
       lat1 = lat2;
@@ -119,8 +110,7 @@ class PolygonUtil {
   /// great circle segments if geodesic is true, and of Rhumb segments
   /// otherwise. The polygon edge is implicitly closed - the closing segment
   /// between the first point and the last point is included.
-  static bool isLocationOnEdge(
-          LatLng point, List<LatLng> polygon, bool geodesic,
+  static bool isLocationOnEdge(LatLng point, List<LatLng> polygon, bool geodesic,
           {num tolerance = defaultTolerance}) =>
       _isLocationOnEdgeOrPath(point, polygon, true, geodesic, tolerance);
 
@@ -129,15 +119,13 @@ class PolygonUtil {
   /// segments if geodesic is true, and of Rhumb segments otherwise.
   /// The polyline is not closed -- the closing segment between the first point
   /// and the last point is not included.
-  static bool isLocationOnPath(
-          LatLng point, List<LatLng> polyline, bool geodesic,
+  static bool isLocationOnPath(LatLng point, List<LatLng> polyline, bool geodesic,
           {num tolerance = defaultTolerance}) =>
       _isLocationOnEdgeOrPath(point, polyline, false, geodesic, tolerance);
 
-  static bool _isLocationOnEdgeOrPath(LatLng point, List<LatLng> poly,
-      bool closed, bool geodesic, num toleranceEarth) {
-    final idx = locationIndexOnEdgeOrPath(
-        point, poly, closed, geodesic, toleranceEarth);
+  static bool _isLocationOnEdgeOrPath(
+      LatLng point, List<LatLng> poly, bool closed, bool geodesic, num toleranceEarth) {
+    final idx = locationIndexOnEdgeOrPath(point, poly, closed, geodesic, toleranceEarth);
 
     return idx >= 0;
   }
@@ -177,8 +165,8 @@ class PolygonUtil {
   /// 1 if between poly[1] and poly[2],
   /// ...,
   /// poly.size()-2 if between poly[poly.size() - 2] and poly[poly.size() - 1]
-  static int locationIndexOnEdgeOrPath(LatLng point, List<LatLng> poly,
-      bool closed, bool geodesic, num toleranceEarth) {
+  static int locationIndexOnEdgeOrPath(
+      LatLng point, List<LatLng> poly, bool closed, bool geodesic, num toleranceEarth) {
     if (poly.isEmpty) {
       return -1;
     }
@@ -217,8 +205,7 @@ class PolygonUtil {
         final lat2 = MathUtil.toRadians(point2.latitude);
         final y2 = MathUtil.mercator(lat2);
         final lng2 = MathUtil.toRadians(point2.longitude);
-        if (max(lat1, lat2) >= minAcceptable &&
-            min(lat1, lat2) <= maxAcceptable) {
+        if (max(lat1, lat2) >= minAcceptable && min(lat1, lat2) <= maxAcceptable) {
           // We offset longitudes by -lng1; the implicit x1 is 0.
           final x2 = MathUtil.wrap(lng2 - lng1, -pi, pi);
           final x3Base = MathUtil.wrap(lng3 - lng1, -pi, pi);
@@ -230,14 +217,11 @@ class PolygonUtil {
           for (final x3 in xTry) {
             final dy = y2 - y1;
             final len2 = x2 * x2 + dy * dy;
-            final t = len2 <= 0
-                ? 0
-                : MathUtil.clamp((x3! * x2 + (y3 - y1) * dy) / len2, 0, 1);
+            final t = len2 <= 0 ? 0 : MathUtil.clamp((x3! * x2 + (y3 - y1) * dy) / len2, 0, 1);
             final xClosest = t * x2;
             final yClosest = y1 + t * dy;
             final latClosest = MathUtil.inverseMercator(yClosest);
-            final havDist =
-                MathUtil.havDistance(lat3, latClosest, x3! - xClosest);
+            final havDist = MathUtil.havDistance(lat3, latClosest, x3! - xClosest);
             if (havDist < havTolerance) {
               return max(0, idx - 1);
             }
@@ -254,8 +238,7 @@ class PolygonUtil {
 
   /// Returns sin(initial bearing from (lat1,lng1) to (lat3,lng3) minus initial
   /// bearing from (lat1, lng1) to (lat2,lng2)).
-  static num _sinDeltaBearing(
-      num lat1, num lng1, num lat2, num lng2, num lat3, num lng3) {
+  static num _sinDeltaBearing(num lat1, num lng1, num lat2, num lng2, num lat3, num lng3) {
     final sinLat1 = sin(lat1);
     final cosLat2 = cos(lat2);
     final cosLat3 = cos(lat3);
@@ -271,8 +254,8 @@ class PolygonUtil {
     return denom <= 0 ? 1 : (a * d - b * c) / sqrt(denom);
   }
 
-  static bool _isOnSegmentGC(num lat1, num lng1, num lat2, num lng2, num lat3,
-      num lng3, num havTolerance) {
+  static bool _isOnSegmentGC(
+      num lat1, num lng1, num lat2, num lng2, num lat3, num lng3, num havTolerance) {
     final havDist13 = MathUtil.havDistance(lat1, lat3, lng1 - lng3);
     if (havDist13 <= havTolerance) {
       return true;
@@ -298,10 +281,8 @@ class PolygonUtil {
     final cosCrossTrack = 1 - 2 * havCrossTrack;
     final havAlongTrack13 = (havDist13 - havCrossTrack) / cosCrossTrack;
     final havAlongTrack23 = (havDist23 - havCrossTrack) / cosCrossTrack;
-    final sinSumAlongTrack =
-        MathUtil.sinSumFromHav(havAlongTrack13, havAlongTrack23);
-    return sinSumAlongTrack >
-        0; // Compare with half-circle == pi using sign of sin().
+    final sinSumAlongTrack = MathUtil.sinSumFromHav(havAlongTrack13, havAlongTrack23);
+    return sinSumAlongTrack > 0; // Compare with half-circle == pi using sign of sin().
   }
 
   /// Simplifies the given poly (polyline or polygon) using the Douglas-Peucker
@@ -340,8 +321,7 @@ class PolygonUtil {
       lastPoint = poly.last;
       // LatLng.latitude and .longitude are immutable, so replace the last point
       poly.removeLast();
-      poly.add(
-          LatLng(lastPoint.latitude + offset, lastPoint.longitude + offset));
+      poly.add(LatLng(lastPoint.latitude + offset, lastPoint.longitude + offset));
     }
 
     int idx;
@@ -412,8 +392,7 @@ class PolygonUtil {
   /// @param start the beginning of the line segment
   /// @param end   the end of the line segment
   /// @return the distance in meters (assuming spherical earth)
-  static num distanceToLine(
-      final LatLng p, final LatLng start, final LatLng end) {
+  static num distanceToLine(final LatLng p, final LatLng start, final LatLng end) {
     if (start == end) {
       return SphericalUtil.computeDistanceBetween(end, p);
     }
